@@ -1,0 +1,36 @@
+--- a/termux-app/terminal-view/src/main/java/com/termux/view/TerminalView.java
++++ b/termux-app/terminal-view/src/main/java/com/termux/view/TerminalView.java
+@@ -660,11 +660,8 @@ public final class TerminalView extends View {
+                         return onKeyUp(keyCode, event);
+                 }
+             }
+-        } else if (mClient.shouldUseCtrlSpaceWorkaround() &&
+-                   keyCode == KeyEvent.KEYCODE_SPACE && event.isCtrlPressed()) {
+-            /* ctrl+space does not work on some ROMs without this workaround.
+-               However, this breaks it on devices where it works out of the box. */
+-            return onKeyDown(keyCode, event);
++        } else if (keyCode == KeyEvent.KEYCODE_SPACE && event.isCtrlPressed()) {
++            return false;
+         }
+         return super.onKeyPreIme(keyCode, event);
+     }
+@@ -784,6 +781,8 @@ public final class TerminalView extends View {
+             return true;
+         } else if (keyCode == KeyEvent.KEYCODE_LANGUAGE_SWITCH) {
+             return super.onKeyDown(keyCode, event);
++        } else if (keyCode == KeyEvent.KEYCODE_SPACE && event.isCtrlPressed()) {
++            return false;
+         }
+ 
+         final int metaState = event.getMetaState();
+@@ -956,6 +955,10 @@ public final class TerminalView extends View {
+         if (TERMINAL_VIEW_KEY_LOGGING_ENABLED)
+             mClient.logInfo(LOG_TAG, "onKeyUp(keyCode=" + keyCode + ", event=" + event + ")");
+ 
++        if (keyCode == KeyEvent.KEYCODE_SPACE && event.isCtrlPressed()) {
++            return false;
++        }
++
+         // Do not return for KEYCODE_BACK and send it to the client since user may be trying
+         // to exit the activity.
+         if (mEmulator == null && keyCode != KeyEvent.KEYCODE_BACK) return true;
