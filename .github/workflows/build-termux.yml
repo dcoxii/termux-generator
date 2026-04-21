@@ -136,7 +136,8 @@ jobs:
         if: "${{ github.event.inputs.plugin != '' }}"
         run: echo "PLUGIN=--plugin ${{ github.event.inputs.plugin }}" >> $GITHUB_ENV
       - name: Build Termux
-        run: ./build-termux.sh \
+        run: |
+          ./build-termux.sh \
                 $ADDITIONAL_PACKAGES \
                 $TERMUX_APP__PACKAGE_NAME \
                 $TERMUX_APP_TYPE \
