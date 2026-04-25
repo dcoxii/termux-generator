@@ -125,13 +125,23 @@ EOF
 patch_apps() {
     apply_patches "$TERMUX_APP_TYPE-patches/app-patches" termux-apps-main
 
-    if [[ "$TERMUX_APP__PACKAGE_NAME" == "com.termux" ]]; then
-        return
+    if [[ "$TERMUX_APP__PACKAGE_NAME" != "com.termux" ]]; then
+        replace_termux_name termux-apps-main "$TERMUX_APP__PACKAGE_NAME"
+        migrate_termux_folder_tree termux-apps-main "$TERMUX_APP__PACKAGE_NAME"
     fi
 
-    replace_termux_name termux-apps-main "$TERMUX_APP__PACKAGE_NAME"
-
-    migrate_termux_folder_tree termux-apps-main "$TERMUX_APP__PACKAGE_NAME"
+    if [[ -n "${APP_DISPLAY_NAME:-}" ]]; then
+        # Replace the app_name string in all Android resource files.
+        # Run after replace_termux_name so this always wins regardless of package name.
+        # "Name:Suffix" variants (e.g. Termux:API) preserve their suffix.
+        local f
+        find termux-apps-main -name "strings.xml" -path "*/res/values/*" | while read -r f; do
+            portable_sed_i \
+                -e "s|<string name=\"app_name\">[^<:]*:\([^<]*\)</string>|<string name=\"app_name\">$APP_DISPLAY_NAME:\1</string>|g" \
+                -e "s|<string name=\"app_name\">[^<:]*</string>|<string name=\"app_name\">$APP_DISPLAY_NAME</string>|g" \
+                "$f"
+        done
+    fi
 }
 
 build_termux_x11() {

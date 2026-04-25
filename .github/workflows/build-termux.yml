@@ -3,11 +3,14 @@ name: Generate Termux application
 on:
   workflow_dispatch:
     inputs:
-      add:
-        description: "Include additional packages in bootstrap in a comma-separated list."
+      app-name:
+        description: "Specify the application display name shown in the launcher (e.g. MyTermux)."
         required: false
       name:
-        description: "Specify TERMUX_APP__PACKAGE_NAME name."
+        description: "Specify TERMUX_APP__PACKAGE_NAME (e.g. com.example.termux). Defaults to com.termux."
+        required: false
+      add:
+        description: "Include additional packages in bootstrap in a comma-separated list."
         required: false
       type:
         description: "Specify the Termux project to fork [f-droid, play-store]. Defaults to f-droid."
@@ -15,6 +18,7 @@ on:
       architectures:
         description: "Specify the bootstrap architectures to include in a comma-separated list."
         required: false
+        default: "aarch64"
       bootstrap-second-stage:
         description: "Automatically execute termux-bootstrap-second-stage.sh."
         required: false
@@ -34,46 +38,46 @@ on:
         required: false
         type: boolean
         default: true
-      tasker:
-        description: "Build the Tasker addon app."
-        required: false
-        type: boolean
-        default: true
-      float:
-        description: "Build the Float addon app."
-        required: false
-        type: boolean
-        default: true
-      widget:
-        description: "Build the Widget addon app."
-        required: false
-        type: boolean
-        default: true
       api:
         description: "Build the API addon app."
         required: false
         type: boolean
         default: true
+      tasker:
+        description: "Build the Tasker addon app."
+        required: false
+        type: boolean
+        default: false
+      float:
+        description: "Build the Float addon app."
+        required: false
+        type: boolean
+        default: false
+      widget:
+        description: "Build the Widget addon app."
+        required: false
+        type: boolean
+        default: false
       boot:
         description: "Build the Boot addon app."
         required: false
         type: boolean
-        default: true
+        default: false
       styling:
         description: "Build the Styling addon app."
         required: false
         type: boolean
-        default: true
+        default: false
       gui:
         description: "Build the GUI addon app."
         required: false
         type: boolean
-        default: true
+        default: false
       x11:
         description: "Build the X11 addon app."
         required: false
         type: boolean
-        default: true
+        default: false
       plugin:
         description: "Specify plugin."
         required: false
@@ -84,12 +88,15 @@ jobs:
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
+      - name: Set --app-name
+        if: "${{ github.event.inputs.app-name != '' }}"
+        run: echo "APP_DISPLAY_NAME=--app-name ${{ github.event.inputs.app-name }}" >> $GITHUB_ENV
+      - name: Set --name
+        if: "${{ github.event.inputs.name != '' }}"
+        run: echo "TERMUX_PACKAGE_NAME_FLAG=--name ${{ github.event.inputs.name }}" >> $GITHUB_ENV
       - name: Set --add
         if: "${{ github.event.inputs.add != '' }}"
         run: echo "ADDITIONAL_PACKAGES=--add ${{ github.event.inputs.add }}" >> $GITHUB_ENV
-      - name: Set --name
-        if: "${{ github.event.inputs.name != '' }}"
-        run: echo "TERMUX_APP__PACKAGE_NAME=--name ${{ github.event.inputs.name }}" >> $GITHUB_ENV
       - name: Set --type
         if: "${{ github.event.inputs.type != '' }}"
         run: echo "TERMUX_APP_TYPE=--type ${{ github.event.inputs.type }}" >> $GITHUB_ENV
@@ -108,6 +115,9 @@ jobs:
       - name: Set --disable-terminal
         if: "${{ github.event.inputs.terminal == 'false' }}"
         run: echo "DISABLE_TERMINAL=--disable-terminal" >> $GITHUB_ENV
+      - name: Set --disable-api
+        if: "${{ github.event.inputs.api == 'false' }}"
+        run: echo "DISABLE_API=--disable-api" >> $GITHUB_ENV
       - name: Set --disable-tasker
         if: "${{ github.event.inputs.tasker == 'false' }}"
         run: echo "DISABLE_TASKER=--disable-tasker" >> $GITHUB_ENV
@@ -117,9 +127,6 @@ jobs:
       - name: Set --disable-widget
         if: "${{ github.event.inputs.widget == 'false' }}"
         run: echo "DISABLE_WIDGET=--disable-widget" >> $GITHUB_ENV
-      - name: Set --disable-api
-        if: "${{ github.event.inputs.api == 'false' }}"
-        run: echo "DISABLE_API=--disable-api" >> $GITHUB_ENV
       - name: Set --disable-boot
         if: "${{ github.event.inputs.boot == 'false' }}"
         run: echo "DISABLE_BOOT=--disable-boot" >> $GITHUB_ENV
@@ -138,18 +145,19 @@ jobs:
       - name: Build Termux
         run: |
           ./build-termux.sh \
+                $APP_DISPLAY_NAME \
+                $TERMUX_PACKAGE_NAME_FLAG \
                 $ADDITIONAL_PACKAGES \
-                $TERMUX_APP__PACKAGE_NAME \
                 $TERMUX_APP_TYPE \
                 $BOOTSTRAP_ARCHITECTURES \
                 $DISABLE_BOOTSTRAP_SECOND_STAGE \
                 $ENABLE_SSH_SERVER \
                 $DISABLE_BOOTSTRAP \
                 $DISABLE_TERMINAL \
+                $DISABLE_API \
                 $DISABLE_TASKER \
                 $DISABLE_FLOAT \
                 $DISABLE_WIDGET \
-                $DISABLE_API \
                 $DISABLE_BOOT \
                 $DISABLE_STYLING \
                 $DISABLE_GUI \
