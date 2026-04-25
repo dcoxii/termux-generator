@@ -7,6 +7,7 @@ cd "$(realpath "$(dirname "$0")")"
 TERMUX_GENERATOR_HOME="$(pwd)"
 TERMUX_APP__PACKAGE_NAME="com.termux"
 TERMUX_APP_TYPE="f-droid"
+APP_DISPLAY_NAME=""
 DO_NOT_CLEAN=""
 TERMUX_GENERATOR_PLUGIN=""
 ADDITIONAL_PACKAGES="xkeyboard-config" # for termux-x11-nightly which is always preinstalled
@@ -38,6 +39,7 @@ show_usage() {
     echo
     echo "Options:"
     echo " -h, --help                       Show this help."
+    echo " -l, --app-name DISPLAY_NAME      Specify the application display name shown in the launcher."
     echo " -a, --add PKG_LIST               Include additional packages in bootstrap archive."
     echo " -n, --name APP_NAME              Specify TERMUX_APP__PACKAGE_NAME name."
     echo " -t, --type APP_TYPE              Specify the Termux project to fork [f-droid, play-store]. Defaults to f-droid."
@@ -88,6 +90,16 @@ while (($# > 0)); do
         -h|--help)
             show_usage
             exit 0
+            ;;
+        -l|--app-name)
+            if [ $# -gt 1 ] && [ -n "$2" ] && [[ $2 != -* ]]; then
+                APP_DISPLAY_NAME="$2"
+                shift 1
+            else
+                echo "[!] Option '--app-name' requires an argument."
+                show_usage
+                exit 1
+            fi
             ;;
         -a|--add)
             if [ $# -gt 1 ] && [ -n "$2" ] && [[ $2 != -* ]]; then
