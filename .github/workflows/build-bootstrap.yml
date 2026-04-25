@@ -91,7 +91,6 @@ jobs:
             --disable-tasker \
             --disable-float \
             --disable-widget \
-            --disable-api \
             --disable-boot \
             --disable-styling \
             --disable-gui \
